@@ -1,6 +1,15 @@
+/****************************************************/
+/* Systems Development Lab., Hitachi, Ltd.          */
+/* Rev.1.0                                          */
+/* 2 February 2010                                  */
+/* (c) Hitachi, Ltd. 2010. All rights reserved.     */
+/****************************************************/
+/**
+
+ *
+ */
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
 #include "enocoro.h"
 
 
@@ -261,62 +270,51 @@ void print_test_vector_result(const unsigned char *key, int key_len,
 int main(int argc, char *argv[])
 {
 	int i;
+	uint8_t key[ENOCORO128_KEY_BYTE_SIZE] = {0};
+	uint8_t iv[ENOCORO_IV_BYTE_SIZE] = {0};
 
-	/* enocoro-128 */
-	uint8_t key[ENOCORO128_KEYSIZE / 8] = 
-		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-	;
+	FILE* file_in = fopen("in.bin", "rb");
+	FILE* file_out = fopen("out.bin", "wb");
 
-	uint8_t iv[ENOCORO_IVSIZE / 8] = 
-		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-	;
+	if(file_in == NULL || file_out == NULL){
+		printf("Erro ao abrir os arquivos!\n");
+		return 1;
+	}
 
+	
 	/* clear key-length and IV-size */
 	uint32_t keysize = ENOCORO128_KEY_BYTE_SIZE;
 	uint32_t ivsize = ENOCORO_IV_BYTE_SIZE;
 
-
-	/* clear ket-stream area */
+	/* clear key-stream area */
 	uint8_t keystream[TEST_VECTOR_BYTE_SIZE] = {0};
 
-
-	char hexstring1[100];
-	char hexstring2[100];
-
-	strcpy(hexstring1,argv[1]);
-
-	unsigned int temp_val;
-
-    for (int i = 0; i < (strlen(hexstring1) / 2); i++) {
-        sscanf(hexstring1 + 2*i, "%02x", &temp_val);
-		key[i] = (uint8_t)temp_val;
-    }
-
-	strcpy(hexstring2,argv[2]);
-
-	for (int i = 0; i < (strlen(hexstring2) / 2); i++) {
-		sscanf(hexstring2 + 2*i, "%02x", &temp_val);
-		iv[i] = (uint8_t)temp_val;
-	}
+	/*buffers utilizados*/
+	uint8_t buffer_arquivo[TEST_VECTOR_BYTE_SIZE];
+	uint8_t buffer_keystream[TEST_VECTOR_BYTE_SIZE];
+	size_t bytes_lidos;
 
 	/* define context-struct */
 	ENOCORO_Ctx ctx; 
+	memset(&ctx, 0, sizeof (ctx));
+	ENOCORO_init(&ctx, key, keysize, iv, ivsize);
+	
+	while((bytes_lidos = fread(buffer_arquivo, 1, TEST_VECTOR_BYTE_SIZE, file_in)) > 0){
 
+		// Gera 'bytes_lidos' de bytes keystream
+		ENOCORO_keystream(&ctx, buffer_keystream, bytes_lidos);
 
-		memset(&ctx, 0, sizeof (ctx));
+		// Faz o XOR manual entre os bytes lidos do arquivo e os gerados na keystream
+		for(size_t i = 0; i < bytes_lidos; i++){
+			buffer_arquivo[i] = buffer_arquivo[i] ^ buffer_keystream[i];
+		}
 
-		printf("---- TEST ---------------\n");
+		fwrite(buffer_arquivo, 1, bytes_lidos, file_out);
+	}
 
-		ENOCORO_init(&ctx, key, keysize, iv, ivsize);
+	fclose(file_in);
+	fclose(file_out);
 
-		/* output randum value */
-		ENOCORO_keystream(&ctx, keystream, TEST_VECTOR_BYTE_SIZE);
-
-		/* print result */
-		print_test_vector_result(key, keysize, iv, ivsize, keystream,
-			TEST_VECTOR_BYTE_SIZE);
-
-
+	printf("Concluido!\n");
 	return 0;
 }
