@@ -25,10 +25,15 @@ void hexdump(uint8_t* data, unsigned int len)
 }
 
 int main(int argc, char* argv[]){
-        
 
-    FILE *file_in = fopen(argv[0], "rb");
-    FILE *file_out = fopen(argv[1], "wb");
+    if(argc != 3)
+    {
+	printf("Uso incorreto! Tente %s <arquivo_entrada> <arquivo_saida>", argv[0]);
+	return 1;
+    }
+
+    FILE *file_in = fopen(argv[1], "rb");
+    FILE *file_out = fopen("output.bin", "wb");
     if (file_in == NULL || file_out == NULL){
 	printf("Erro na abertura dos arquivos\n");
 	return 1;
