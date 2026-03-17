@@ -24,10 +24,11 @@ void hexdump(uint8_t* data, unsigned int len)
 	printf("\x1b[52G%.*s\n", len % 16, buff);
 }
 
-int main(){
+int main(int argc, char* argv[]){
+        
 
-    FILE *file_in = fopen("input.txt", "rb");
-    FILE *file_out = fopen("output.bin", "wb");
+    FILE *file_in = fopen(argv[0], "rb");
+    FILE *file_out = fopen(argv[1], "wb");
     if (file_in == NULL || file_out == NULL){
 	printf("Erro na abertura dos arquivos\n");
 	return 1;
