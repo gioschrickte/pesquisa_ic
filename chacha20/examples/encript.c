@@ -26,7 +26,7 @@ void hexdump(uint8_t* data, unsigned int len)
 
 int main(int argc, char* argv[]){
 
-    if(argc != 3)
+    if(argc != 2)
     {
 	printf("Uso incorreto! Tente %s <arquivo_entrada> <arquivo_saida>", argv[0]);
 	return 1;

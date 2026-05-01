@@ -273,7 +273,12 @@ int main(int argc, char *argv[])
 	uint8_t key[ENOCORO128_KEY_BYTE_SIZE] = {0};
 	uint8_t iv[ENOCORO_IV_BYTE_SIZE] = {0};
 
-	FILE* file_in = fopen("in.bin", "rb");
+	if (argc < 2) {
+		printf("Uso correto: %s <arquivo_entrada> <arquivo_saida>\n", argv[0]);
+		return 1;
+	}
+
+	FILE* file_in = fopen(argv[1], "rb");
 	FILE* file_out = fopen("out.bin", "wb");
 
 	if(file_in == NULL || file_out == NULL){
