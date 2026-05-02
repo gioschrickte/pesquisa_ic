@@ -1,9 +1,5 @@
 test: 
-	@gcc test.c rabbit.c -o test_unit 
-	@./test_unit
-
-clean:
-	@rm test_unit
+	@gcc test.c rabbit.c -o test_unit.o
 
 .PHNOY: test 
 

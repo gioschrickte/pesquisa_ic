@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include "ecrypt-sync.h"
 #include "stdio.h"
 #include "stdint.h"
@@ -24,7 +26,12 @@ int main(int argc, char **argv) {
     uint8_t buf_in[CHUNK_SIZE];
     uint8_t buf_out[CHUNK_SIZE];
 
-    ECRYPT_keysetup(&ctx, key, 16, 8);
+    memset(buf_in, 0xAA, CHUNK_SIZE);
+    memset(buf_out, 0x00, CHUNK_SIZE);
+
+    int bytes_lidos = CHUNK_SIZE;
+
+    ECRYPT_keysetup(&ctx, key, 128, 64);
     ECRYPT_ivsetup(&ctx, iv);
 
     // Inicio do Benchmarking

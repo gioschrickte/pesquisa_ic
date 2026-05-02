@@ -287,7 +287,6 @@ int main(int argc, char *argv[])
 	/*buffers utilizados*/
 	uint8_t buffer_arquivo[TEST_VECTOR_BYTE_SIZE];
 	uint8_t buffer_keystream[TEST_VECTOR_BYTE_SIZE];
-	size_t bytes_lidos;
 
 	/* define context-struct */
 	ENOCORO_Ctx ctx; 
@@ -298,13 +297,13 @@ int main(int argc, char *argv[])
 
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &inicio);
 	
-	for(i = 0; i < 1024 < i++){
+	for(i = 0; i < 1024; i++){
 
 		// Gera 'bytes_lidos' de bytes keystream
-		ENOCORO_keystream(&ctx, buffer_keystream, bytes_lidos);
+		ENOCORO_keystream(&ctx, buffer_keystream, TEST_VECTOR_BYTE_SIZE);
 
 		// Faz o XOR manual entre os bytes lidos do arquivo e os gerados na keystream
-		for(size_t i = 0; i < bytes_lidos; i++){
+		for(size_t j = 0; j < TEST_VECTOR_BYTE_SIZE; j++){
 			buffer_arquivo[i] = buffer_arquivo[i] ^ buffer_keystream[i];
 		}
 	}
