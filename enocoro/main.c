@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 
 		// Faz o XOR manual entre os bytes lidos do arquivo e os gerados na keystream
 		for(size_t j = 0; j < TEST_VECTOR_BYTE_SIZE; j++){
-			buffer_arquivo[i] = buffer_arquivo[i] ^ buffer_keystream[i];
+			buffer_arquivo[j] = buffer_arquivo[j] ^ buffer_keystream[j];
 		}
 	}
 
