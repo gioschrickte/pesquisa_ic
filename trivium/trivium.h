@@ -1,21 +1,46 @@
-#ifndef __TRIVIUM_H__
-#define __TRIVIUM_H__
+/* trivium.h
+ *
+ * Header derivado da implementação de referência do Trivium em C++,
+ * obtida do repositório crocs-muni/CryptoStreams (que envelopa em
+ * namespace C++ a referência original de Christophe De Cannière,
+ * K.U.Leuven, submetida ao eSTREAM). O conteúdo algorítmico é
+ * preservado integralmente; apenas o envelope C++ (namespaces e
+ * classes) foi removido para uso direto em C.
+ *
+ * Renomeação:
+ *   ECRYPT_keysetup       -> TRIVIUM_keysetup
+ *   ECRYPT_ivsetup        -> TRIVIUM_ivsetup
+ *   ECRYPT_encrypt_bytes  -> TRIVIUM_encrypt_bytes
+ *   ECRYPT_decrypt_bytes  -> TRIVIUM_decrypt_bytes
+ *
+ * Justificativa: evitar conflito de símbolos caso múltiplas cifras
+ * eSTREAM sejam linkadas no mesmo binário. A semântica é idêntica.
+ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#ifndef TRIVIUM_H
+#define TRIVIUM_H
 
-#define TRIVIUM_STATE_SIZE 36
+#include "ecrypt-portable.h"
 
-typedef struct _trivium_ctx
-{
-    uint8_t* key;
-    uint8_t* iv;
-    uint8_t b[TRIVIUM_STATE_SIZE];
-} trivium_ctx;
+#define TRIVIUM_NAME "TRIVIUM"
 
-trivium_ctx* trivium_init(uint8_t *key, uint8_t *iv);
+#define TRIVIUM_KEYSIZE_BITS 80
+#define TRIVIUM_IVSIZE_BITS  80
 
-uint8_t trivium_gen_keystream(trivium_ctx* ctx);
+/* Número de rodadas de inicialização da especificação oficial.
+ * O CRoCS parametriza para análise round-reduced; aqui fixamos no
+ * valor canônico (9 iterações × 2 = 18 chamadas UPDATE/ROTATE,
+ * correspondendo aos 1152 passos de clock da spec do De Cannière). */
+#define TRIVIUM_INIT_ROUNDS 9
 
-#endif // __TRIVIUM_H__
+typedef struct {
+    u64 init[2];
+    u64 state[6];
+} TRIVIUM_ctx;
+
+void TRIVIUM_keysetup(TRIVIUM_ctx *ctx, const u8 *key, u32 keysize, u32 ivsize);
+void TRIVIUM_ivsetup (TRIVIUM_ctx *ctx, const u8 *iv);
+void TRIVIUM_encrypt_bytes(TRIVIUM_ctx *ctx, const u8 *plaintext, u8 *ciphertext, u32 msglen);
+void TRIVIUM_decrypt_bytes(TRIVIUM_ctx *ctx, const u8 *ciphertext, u8 *plaintext, u32 msglen);
+
+#endif
