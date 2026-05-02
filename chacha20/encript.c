@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 #define CHACHA20_IMPLEMENTATION
-#define CHUNK_SIZE 4096
-#include "../ChaCha20.h"
+#define CHUNK_SIZE 1024
+#include "ChaCha20.h"
 
 void hexdump(uint8_t* data, unsigned int len)
 {
@@ -26,22 +27,8 @@ void hexdump(uint8_t* data, unsigned int len)
 
 int main(int argc, char* argv[]){
 
-    if(argc != 2)
-    {
-	printf("Uso incorreto! Tente %s <arquivo_entrada> <arquivo_saida>", argv[0]);
-	return 1;
-    }
-
-    FILE *file_in = fopen(argv[1], "rb");
-    FILE *file_out = fopen("output.bin", "wb");
-    if (file_in == NULL || file_out == NULL){
-	printf("Erro na abertura dos arquivos\n");
-	return 1;
-    }
-    else{
-	printf("Arquivos abertos com sucesso!\n");
-    }
-
+    struct timespec inicio, fim;
+    double tempo_gasto;
 
     key256_t key = 
     {
@@ -50,28 +37,28 @@ int main(int argc, char* argv[]){
         0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
         0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
     };
-
     uint32_t count = 0x00000001;
-
     nonce96_t nonce = {0x00, 0x00, 0x00 , 0x00 , 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00};
 
     uint8_t buffer[CHUNK_SIZE];
-    size_t bytes_lidos;
-
-    printf("Iniciando teste\n");
+    memset(buffer, 0xAA, CHUNK_SIZE);
 
     ChaCha20_Ctx ctx;
     ChaCha20_init(&ctx, key, nonce, count);
 
-    while((bytes_lidos = fread(buffer, 1, CHUNK_SIZE, file_in)) > 0){
-	ChaCha20_xor(&ctx, buffer, bytes_lidos);
-	fwrite(buffer, 1, bytes_lidos, file_out);
+    // Início do benchmarking
+
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &inicio);
+
+    for(int i = 0; i < 1024; i++){
+	ChaCha20_xor(&ctx, buffer, CHUNK_SIZE);
     }
 
-    fclose(file_in);
-    fclose(file_out);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &fim);
 
-    printf("Fim do teste\n");
+    tempo_gasto = (fim.tv_sec - inicio.tv_sec) + (fim.tv_nsec - inicio.tv_nsec) / 1e9;
+
+    printf("%.9f\n", tempo_gasto);
 
     return 0;
 }
