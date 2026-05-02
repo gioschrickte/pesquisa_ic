@@ -3,5 +3,3 @@ inputs/
 *.bin
 *.dat
 
-*.out
-*.o

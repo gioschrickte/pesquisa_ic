@@ -1,0 +1,1 @@
+Para fins de padronização metodológica, todos os executáveis foram compilados com compilador GCC (versão 14.2.0) empregando a flag de otimização máxima, afim de contornar os gargalos de chamadas de função em software.
