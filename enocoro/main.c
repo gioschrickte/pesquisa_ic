@@ -10,8 +10,8 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "enocoro.h"
-
 
 /**
  * MACRO
@@ -269,23 +269,13 @@ void print_test_vector_result(const unsigned char *key, int key_len,
 
 int main(int argc, char *argv[])
 {
-	int i;
+	// Aqui, o tamanho do buffer está definido em 1024 bytes, em TEST_VECTOR_BYTE_SIZE
+	struct timespec inicio, fim;
+    double tempo_gasto;
+	int i = 0;
+
 	uint8_t key[ENOCORO128_KEY_BYTE_SIZE] = {0};
 	uint8_t iv[ENOCORO_IV_BYTE_SIZE] = {0};
-
-	if (argc < 2) {
-		printf("Uso correto: %s <arquivo_entrada> <arquivo_saida>\n", argv[0]);
-		return 1;
-	}
-
-	FILE* file_in = fopen(argv[1], "rb");
-	FILE* file_out = fopen("out.bin", "wb");
-
-	if(file_in == NULL || file_out == NULL){
-		printf("Erro ao abrir os arquivos!\n");
-		return 1;
-	}
-
 	
 	/* clear key-length and IV-size */
 	uint32_t keysize = ENOCORO128_KEY_BYTE_SIZE;
@@ -303,8 +293,12 @@ int main(int argc, char *argv[])
 	ENOCORO_Ctx ctx; 
 	memset(&ctx, 0, sizeof (ctx));
 	ENOCORO_init(&ctx, key, keysize, iv, ivsize);
+
+	// Inicio benchmarking
+
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &inicio);
 	
-	while((bytes_lidos = fread(buffer_arquivo, 1, TEST_VECTOR_BYTE_SIZE, file_in)) > 0){
+	for(i = 0; i < 1024 < i++){
 
 		// Gera 'bytes_lidos' de bytes keystream
 		ENOCORO_keystream(&ctx, buffer_keystream, bytes_lidos);
@@ -313,13 +307,13 @@ int main(int argc, char *argv[])
 		for(size_t i = 0; i < bytes_lidos; i++){
 			buffer_arquivo[i] = buffer_arquivo[i] ^ buffer_keystream[i];
 		}
-
-		fwrite(buffer_arquivo, 1, bytes_lidos, file_out);
 	}
 
-	fclose(file_in);
-	fclose(file_out);
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &fim);
 
-	printf("Concluido!\n");
+	// Calculo do tempo
+
+	tempo_gasto = (fim.tv_sec - inicio.tv_sec) + (fim.tv_nsec - inicio.tv_nsec) / 1e9;
+	printf("%.9f\n", tempo_gasto);
 	return 0;
 }

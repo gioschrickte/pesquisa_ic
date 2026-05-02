@@ -29,6 +29,7 @@ int main(int argc, char* argv[]){
 
     struct timespec inicio, fim;
     double tempo_gasto;
+    int i = 0;
 
     key256_t key = 
     {
@@ -50,7 +51,7 @@ int main(int argc, char* argv[]){
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &inicio);
 
-    for(int i = 0; i < 1024; i++){
+    for(i = 0; i < 1024; i++){
 	ChaCha20_xor(&ctx, buffer, CHUNK_SIZE);
     }
 

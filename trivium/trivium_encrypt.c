@@ -1,7 +1,15 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "utils.h"
 #include <trivium.h>
+
+#define CHUNK_SIZE 1024
+
+uint8_t get_random_byte()
+{
+    return (uint8_t) (rand() % 256);
+}
 
 uint8_t hexchar_to_int(char ch)
 {
@@ -28,49 +36,40 @@ int main(int argc, char **argv)
 {
     uint8_t key[10], iv[10];
 
-    uint8_t buffer, encbuffer;
+    uint8_t buffer[CHUNK_SIZE], encbuffer[CHUNK_SIZE];
+    memset(buffer, 0xAA, CHUNK_SIZE);
 
-    FILE *pFile, *outFile;
+    struct timespec inicio, fim;
+    double tempo_gasto;
+    int i = 0;
 
-    uint8_t i;
-
-    if (argc != 3)
-    {
-        printf("Usage: %s cipher.file output.file\n", argv[0]);
-        return 0;
-    }
-
-    // Initialize the key
-    printf("Type key in hexadecimal format (80 bit):\n");
-    for (i = 0; i < 10; i++)
-    {
-        key[i] = get_byte_from_console_input();
-    }
-
-    // Initialize the IV
-    pFile = fopen(argv[1] , "rb");
-    outFile = fopen(argv[2], "wb");
-    if (pFile==NULL) {fputs ("Input file error",stderr); exit (1);}
-    if (outFile==NULL) {fputs ("Output file error",stderr); exit (1);}
+    // Initialize the key and the IV
+    srand(time(NULL));
 
     for(i = 0; i < 10; i++)
     {
-        fread(&buffer, 1, 1, pFile);
-        iv[i] = buffer;
+        key[i] = get_random_byte();
+        iv[i] = get_random_byte();
     }
 
     // Initialize the trivium cipher
     trivium_ctx* ctx = trivium_init(key, iv);
 
-    // Decrypt the file
+    // INICIO BENCHMARKING
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &inicio);
+
+    // Encrypt the file
     while(fread(&buffer, 1, 1, pFile) != 0)
     {
         encbuffer = buffer ^ trivium_gen_keystream(ctx);
-        fwrite(&encbuffer, 1, 1, outFile);
     }
 
-    fclose(pFile);
-    fclose(outFile);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &fim);
+
+    // Calculo e impressão do tempo
+    tempo_gasto = (fim.tv_sec - inicio.tv_sec) + (fim.tv_nsec - inicio.tv_nsec) / 1e9;
+    printf("%.9f\n", tempo_gasto);
+    
 
     return 0;
 }

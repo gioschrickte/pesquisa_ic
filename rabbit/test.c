@@ -2,7 +2,7 @@
 #include "stdio.h"
 #include "stdint.h"
 #include "string.h"
-#define CHUNK_SIZE 4096
+#define CHUNK_SIZE 1024
 
 void print_hex(const char *tag, uint8_t *arg, int len) {
     printf("%12s: ", tag);    
@@ -11,14 +11,10 @@ void print_hex(const char *tag, uint8_t *arg, int len) {
 }
 
 int main(int argc, char **argv) {
-    FILE* file_in = fopen("in.bin", "rb");
-    FILE* file_out = fopen("out.bin", "wb");
-
-    if(file_in == NULL || file_out == NULL){
-        printf("Erro na abertura dos arquivos\n");
-        return 1;
-    }
     
+    struct timespec inicio, fim;
+    double tempo_gasto;
+	int i = 0;
 
     uint8_t key[16] = {0};
     uint8_t iv[8] = {0};    
@@ -27,26 +23,24 @@ int main(int argc, char **argv) {
 
     uint8_t buf_in[CHUNK_SIZE];
     uint8_t buf_out[CHUNK_SIZE];
-    size_t bytes_lidos;
 
     ECRYPT_keysetup(&ctx, key, 16, 8);
     ECRYPT_ivsetup(&ctx, iv);
 
-    printf("Iniciando criptografia com Rabbit...\n");
+    // Inicio do Benchmarking
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &inicio);
 
-    while ((bytes_lidos = fread(buf_in, 1, CHUNK_SIZE, file_in)) > 0) {
-        
+    for(int i = 0; i < 1024; i++) {
         // recebe o In, joga pro Out e já faz o XOR
         ECRYPT_encrypt_bytes(&ctx, buf_in, buf_out, bytes_lidos);
-
-        // Escreve os bytes já encriptados (que estão no buf_out) para o disco
-        fwrite(buf_out, 1, bytes_lidos, file_out);
     }
 
-    fclose(file_in);
-    fclose(file_out);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &fim);
 
-    printf("Processamento concluído com sucesso!\n");
+    // Calculo e impressão do tempo
+    tempo_gasto = (fim.tv_sec - inicio.tv_sec) + (fim.tv_nsec - inicio.tv_nsec) / 1e9;
+    printf("%.9f\n", tempo_gasto);
+
     return 0;
 }
 
